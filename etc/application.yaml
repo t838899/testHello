@@ -1,0 +1,98 @@
+info:
+  tag: ${IMAGE_TAG}
+  build:
+    artifact: ${PROJECT_ARTIFACT_ID}
+    name: ${PROJECT_NAME}
+    version: ${PROJECT_VERSION}
+    build: ${BUILD_DT}
+management:
+  security:
+    enabled: false
+server:
+  contextPath: /v1
+RESTAuthFilterConfig:
+  filterUrls:
+    - /greeting
+    - /greeting2
+    
+logging:
+  level:
+    root: INFO
+    com.telus.p3ms: DEBUG
+    org.apache.ibatis: DEBUG
+    org.springframework: WARN
+    com.zaxxer.hikari: ERROR
+    
+spring:
+  jackson:
+    default-property-inclusion: NON_NULL
+
+   
+---
+
+spring:
+  profiles: local
+
+RESTAuthFilterConfig:
+  filterUrls:
+
+
+---
+
+spring:
+  profiles: dv
+
+
+    
+---
+
+spring:
+  profiles: it01
+
+
+    
+---
+
+
+    
+spring:
+  profiles: it02
+  
+ 
+
+
+---
+
+spring:
+  profiles: it03
+
+
+    
+---
+
+spring:
+  profiles: it04
+
+
+    
+logging:
+  level:
+    root: INFO
+    com.telus.p3ms: INFO
+    org.apache.ibatis: INFO
+    org.springframework: WARN
+    com.zaxxer.hikari: ERROR    
+---
+
+spring:
+  profiles: pr
+
+
+    
+logging:
+  level:
+    root: INFO
+    com.telus.p3ms: INFO
+    org.apache.ibatis: INFO
+    org.springframework: WARN
+    com.zaxxer.hikari: ERROR 
