@@ -1,0 +1,69 @@
+steps:
+  # Download chaches dependancies [target build will get dependencies from cache]
+  - name: gcr.io/cloud-builders/gsutil
+    id: 'download-cached-maven-dependencies'
+    entrypoint: bash
+    volumes:
+      - name: 'maven-repository'
+        path: '/root/.m2'    
+    args:
+      - '-c'
+      - |
+        gsutil cp gs://tf-state-cdo-testHello-np-ebdbc4/maven-dependencies/maven_repo.tar.gz maven_repo.tar.gz  || exit 0
+        tar -xzf maven_repo.tar.gz --directory / || exit 0
+        
+  # Build the maven project, use ci-commons image that contains Maven and CI libraries [in target build we should not have have ref to common this way]
+  - name: 'maven:3.6.3-jdk-11-slim'
+    id: 'build-step'
+    entrypoint: 'mvn'
+    volumes:
+      - name: 'maven-repository'
+        path: '/root/.m2'
+    args: ['clean','install', '-Dowasp=']
+    
+#  # Upload Maven dependancies after downloading [target build will upload dependencies to cache]
+#  - id: 'upload-cached-maven-dependencies'
+#    waitFor: [ 'build-step']
+#    name: gcr.io/cloud-builders/gsutil
+#    entrypoint: bash
+#    volumes:
+#      - name: 'maven-repository'
+#        path: '/root/.m2'
+#    args:
+#      - '-c'
+#      - |
+#        tar -zcf maven_repo.tar.gz /root/.m2
+#        gsutil cp maven_repo.tar.gz gs://tf-state-cdo-fibr-inst-mgmt-np-ebdbc4/maven-dependencies/maven_repo.tar.gz
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'Build Application Image'
+    dir:
+    args:
+    - 'build'
+    - '.'
+    - '-t'
+    - 'gcr.io/${_DEVOPS_PROJECT}/${_NAMESPACE}/${_APP}:latest'
+    - '-t'
+    - 'gcr.io/${_DEVOPS_PROJECT}/${_NAMESPACE}/${_APP}:$SHORT_SHA'
+    
+  
+    
+images:
+#- 'gcr.io/${_DEVOPS_PROJECT}/${_NAMESPACE}/${_TEST_APP}:latest'
+- 'gcr.io/${_DEVOPS_PROJECT}/${_NAMESPACE}/${_APP}:latest'
+- 'gcr.io/${_DEVOPS_PROJECT}/${_NAMESPACE}/${_APP}:$SHORT_SHA'
+
+# Un-comment after completing Sonarqube pre-requisites
+#availableSecrets:
+#  secretManager:
+#    - versionName: projects/${_SONAR_PROJECT}/secrets/sonar_token/versions/latest
+#      env: 'SQ_TOKEN'
+  
+substitutions:
+  _APP: testHello
+  _NAMESPACE: webconsb2b-testHello
+  _DEVOPS_PROJECT: 'cio-gke-devops-e4993356'
+  _ORG: cdo
+  _TEST_APP: test-testHello
+  _SONAR_PROJECT: 'cio-sonarqube-np-dd42e7'
+  _SONAR_SOURCES_DIR: .
